@@ -15,11 +15,12 @@ import { Box } from "@mui/system";
 import { ClearAllOutlined, ClearOutlined, SearchOutlined, ShoppingCartOutlined } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { useContext, useState } from "react";
-import { UiContext } from "@/context";
+import { CartContext, UiContext } from "@/context";
 
 export const Navbar = () => {
   const { asPath, push } = useRouter(); //Lo usaremos para margar el boton
   const { toggleSideMenu } = useContext(UiContext); //llamo a la funcion
+  const { numberOfItems } = useContext(CartContext); //llamo a la funcion
 
   const router = useRouter();
   const [searchTerm, setSearchTerm ] = useState('');
@@ -106,10 +107,10 @@ export const Navbar = () => {
           <SearchOutlined />
         </IconButton>
         {/*----------------------------------------------------- */}
-        <NextLink href="/category/men" passHref legacyBehavior>
+        <NextLink href="/cart" passHref legacyBehavior>
           <Link>
             <IconButton>
-              <Badge badgeContent={2} color="secondary">
+              <Badge badgeContent={numberOfItems} color="secondary">
                 <ShoppingCartOutlined />
               </Badge>
             </IconButton>

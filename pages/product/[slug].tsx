@@ -1,12 +1,14 @@
 import { ShopLayout } from "@/components/layouts"
 import { ProductSlideshow, SizeSelector } from "@/components/products";
 import { ItemCounter } from "@/components/ui";
-import { db, dbProducts } from "@/database";
-import { IProduct } from "@/interfaces";
-import { Product } from "@/models";
-import { Button, Grid, Typography } from "@mui/material";
+import { dbProducts } from "@/database";
+import { ICartProduct, IProduct, ISize } from "@/interfaces";
+import { Button, Chip, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system";
-import { GetServerSideProps, GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { useRouter } from "next/router";
+import { useContext, useState } from "react";
+import { CartContext } from '@/context/cart'
 
 // const product = initialData.products[0];
 interface Props{
@@ -17,6 +19,47 @@ const ProductPage: NextPage<Props> = ({product}) => {
   // const {products: product, isLoading} = useProducts(`/products/${router.query.slug}`);
   // Estamos renombrando el product y del route sacamos desde la query(propiedad del 
   // router) la propiedad de nuestro producto que es el slug
+
+  const router = useRouter();
+  //Para poder realizar mi agregar al carrito necesito tomar mi contexto
+  const {addProductToCart} = useContext ( CartContext );
+
+
+  const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({ //UIn estado temporal
+    _id: product._id,
+    image : product.images[0],
+    price: product.price, 
+    size: undefined,
+    slug: product.slug,
+    title: product.title, 
+    gender: product.gender,
+    quantity: 1, 
+  });
+
+  const selectedSize = (size: ISize) => {
+    setTempCartProduct(currentProduct => ({
+      ...currentProduct,
+      size
+    }));
+  }
+
+//Funcion para el contador
+  const onUpdateQuantity = (quantity: number) => { 
+    setTempCartProduct(currentProduct => ({
+      ...currentProduct,
+      quantity
+    }));
+  }
+
+//Funcion agregar producto
+  const onAddProduct = () => { 
+    if (!tempCartProduct.size) { return; }
+
+
+  //llamar accion context para agregar al carrito
+    addProductToCart ( tempCartProduct )
+    router.push('/cart');
+  }
 
 
 
@@ -39,18 +82,47 @@ const ProductPage: NextPage<Props> = ({product}) => {
                     {/*Cantidad de elementos */}
                     <Box sx={{my:2}}>
                       <Typography variant='subtitle2' > Cantidad </Typography>
-                      <ItemCounter />
+
+                      <ItemCounter 
+                        currentValue={tempCartProduct.quantity}
+                        updatedQuantity={ onUpdateQuantity} 
+                        maxValue={product.inStock > 5 ? 5 : product.inStock }
+                        //Si el producto en stock es mayor a 5 el maxValue es 5 y si no, es el stock del producto
+                      />
 
                       <SizeSelector 
                         // selectorSize={product.sizes[0]} 
                         sizes={product.sizes}
+                        selectorSize={tempCartProduct.size}
+                        onSelectedSize={ selectedSize }
                       />
 
                     </Box>
                      {/*Agregar al carrito */}
-                     <Button color="secondary" className="circular-btn">Agregar al carrito</Button>
+                     {
+                      (product.inStock > 0 ) 
+                        ?(
+                          <Button 
+                            color="secondary" 
+                            className="circular-btn"
+                            onClick={onAddProduct}
+                            
+                            >
+                           { 
+                           tempCartProduct.size
+                            ? ' Agregar al carrito'
+                            :  'Seleccione una talla'
+                           }
+                          
+                          </Button>
+                        ):
+                        (
+                          <Chip label='No hay disponibles' color='error' variant='outlined' /> 
+                        )
+                     }
+                     
 
-                     {/* <Chip label='No hay disponibles' color='error' variant='outlined' /> */}
+                     
                      <Box sx={{mt:3}}>
                         <Typography variant="subtitle2">Descripcion</Typography>
                         <Typography variant="body2">{product.description}</Typography>

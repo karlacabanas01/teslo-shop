@@ -27,3 +27,10 @@ const HomePage: NextPage = () => {
   )
 }
 export default HomePage;
+
+
+
+
+//Nota: diferencia entre el 
+// LocalStorage se debe hacer una peticion
+// Cookies cuando se hace la peticion al backend viajan automaticamente al servidor, es automatica

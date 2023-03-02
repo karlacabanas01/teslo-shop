@@ -1,65 +1,84 @@
-import { initialData } from "@/database/products";
-import { Button, CardActionArea, CardMedia, Grid, Typography } from "@mui/material";
-import { Box } from "@mui/system";
-import NextLink from "next/link";
-import { FC } from "react";
-import { ItemCounter } from "../ui";
 
-const productsInCard = [
-    initialData.products[0],
-    initialData.products[1],
-    initialData.products[2],
-]
+import { FC, useContext } from 'react';
+import NextLink from 'next/link';
+import { Box, Button, CardActionArea, CardMedia, Grid, Link, Typography } from '@mui/material';
+
+
+import { CartContext } from '../../context';
+import { ICartProduct } from '../../interfaces';
+import { ItemCounter } from '../ui';
 
 interface Props {
     editable?: boolean;
 }
 
-export const CartList:FC<Props> = ({editable = false}) => {
+export const CartList:FC<Props> = ({editable = true}) => {
+    //Tomo los productos que tengo en la lista del carrito del contexto
+    const {cart, updateCartQuantity, removeCartProduct } = useContext(CartContext);
+
+    const onNewCartQuantityValue = (product: ICartProduct, newQuantityValue: number) =>{ 
+      product.quantity = newQuantityValue;
+      updateCartQuantity(product);
+
+    }
 
   return (
     <>
-        {
-            productsInCard.map(product =>(
-                <Grid container spacing={2} sx={{mb: 1}} key={product.slug}>
-                    <Grid xs={3}> 
-                        <NextLink href={'/product/slug'} passHref>
-                            <CardActionArea>
-                                <CardMedia 
-                                    image={`/products/${product.images[0]}`}
-                                    component="img"
-                                    sx={{borderRadius: '5px'}}
-                                />
-                            </CardActionArea>
-                        </NextLink>
-                    
-                    </Grid>
-                    <Grid xs={7}>
-                        <Box display='flex' flexDirection='column'>
-                            <Typography variant="body1">{product.title} </Typography>
-                            <Typography variant="body1">Talla: <strong>M</strong> </Typography>
+      {
+                cart.map( product => (
+                    <Grid container spacing={2} key={ product.slug + product.size } sx={{ mb:1 }}>
+                        <Grid item xs={3}>
+                            {/* TODO: llevar a la página del producto */}
+                            <NextLink href={`/product/${ product.slug }`} passHref>
+                                    <CardActionArea>
+                                        <CardMedia 
+                                            image={ `/products/${ product.image }` }
+                                            component='img'
+                                            sx={{ borderRadius: '5px' }}
+                                        />
+                                    </CardActionArea>
+                            </NextLink>
+                        </Grid>
+                        <Grid item xs={7}>
+                            <Box display='flex' flexDirection='column'>
+                                <Typography variant='body1'>{ product.title }</Typography>
+                                <Typography variant='body1'>Talla: <strong>{ product.size }</strong></Typography>
 
-                            {
-                                editable
-                                ? <ItemCounter/>
-                                : <Typography variant="h6">3 Items</Typography>
-                            }
-
+                                {
+                                    editable 
+                                    ? (
+                                        <ItemCounter 
+                                            currentValue={ product.quantity }
+                                            maxValue={ 10 } 
+                                            updatedQuantity={ ( value ) => onNewCartQuantityValue(product, value )}
+                                        />
+                                    )
+                                    : (
+                                        <Typography variant='h5'>{ product.quantity } { product.quantity > 1 ? 'productos':'producto' }</Typography>
+                                    )
+                                }
+                                
+                            </Box>
+                        </Grid>
+                        <Grid item xs={2} display='flex' alignItems='center' flexDirection='column'>
+                            <Typography variant='subtitle1'>{ `$${ product.price }` }</Typography>
                             
-                        </Box>
-                    </Grid>
-                    <Grid xs={2} display='flex' alignItems='center' flexDirection='column'> 
-                        <Typography variant="subtitle1">$ {product.price} </Typography>
-                        {
+                            {
                                 editable && (
-                                    <Button variant="text" color="secondary">Remover</Button>
+                                    <Button 
+                                        variant='text' 
+                                        color='secondary' 
+                                        onClick={ () => removeCartProduct( product ) }
+                                    >
+                                        Remover
+                                    </Button>
                                 )
-                        }
-                        
+                            }
+                        </Grid>
                     </Grid>
-                </Grid>
-            ))
-        }
+                ))
+            }
+
     </>
   )
 }
