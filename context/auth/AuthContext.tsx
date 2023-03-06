@@ -2,6 +2,7 @@ import { IUser } from '@/interfaces';
 import { createContext } from 'react'; 
 //El contexto es lo que quiero que vean los componentes hijos fuera del provider
 interface ContextProps { 
+    
     isLoggedIn: boolean;
     user?: IUser;
 
