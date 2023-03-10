@@ -2,16 +2,17 @@ import { tesloApi } from '@/api';
 import { IUser } from '@/interfaces';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/router';
 import { FC, ReactNode, useEffect, useReducer } from 'react';
 import { AuthContext, authReducer } from './';
 
 export interface AuthState {
-    isLogginIn: boolean,
+    isLoggedIn: boolean,
     user? : IUser
 }
 
 const AUTH_INITIAL_STATE: AuthState = {
-    isLogginIn: false,
+    isLoggedIn: false,
     user: undefined,
 }
 
@@ -21,51 +22,49 @@ interface Props {
 
 export const AuthProvider:FC<Props> = ({ children }) => {
     const [state, dispatch] = useReducer( authReducer , AUTH_INITIAL_STATE );
+    const router = useRouter();
 
     useEffect(() => {
         ckeckToken();
     }, [])
 
     const ckeckToken = async() => {
-       if (!Cookies.get('token')) {
+        if ( !Cookies.get('token') ) {
             return;
-       }
-        
-      try {
-          const {data} = await tesloApi.get('/user/validate-jwt'); //llamar al endpoint
-          const {token, user} = data;//revalidar token guarduado
-          Cookies.set('token', token);
-          dispatch({type:'[Auth] - Login ', payload: user});//dispatch login
+        }
 
-            
-      } catch (error) {
-          Cookies.remove('token'); //borrrar el token de las cookies
-      }
+        try {
+            const { data } = await tesloApi.get('/user/validate-token');
+            const { token, user } = data;
+            Cookies.set('token', token );
+            dispatch({ type: '[Auth] - Login', payload: user });
+        } catch (error) {
+            Cookies.remove('token');
+        }
     }
     
 
     const loginUser = async (email: string, password: string) : Promise<boolean> => {
         
-      try {
-          const {data} = await tesloApi.post('/user/login', {email, password});
-          const {token, user} = data;
-          Cookies.set('token', token);
-          dispatch({type:'[Auth] - Login ', payload: user});
-          return true;
-            
-      } catch (error) {
-          return false;
-      }
+        try {
+            const { data } = await tesloApi.post('/user/login', { email, password });
+            const { token, user } = data;
+            Cookies.set('token', token );
+            dispatch({ type: '[Auth] - Login', payload: user });
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 
 
-    const registerUser = async (name: string, email:string, password:string):Promise<{hasError: boolean; message?: string}> =>{
+    const registerUser = async( name: string, email: string, password: string ): Promise<{hasError: boolean; message?: string}> => {
         
       try {
         const {data} = await tesloApi.post('/user/register', {email, password, name});
         const {token, user} = data;
         Cookies.set('token', token);
-        dispatch({type:'[Auth] - Login ', payload: user});
+        dispatch({type:'[Auth] - Login', payload: user});
         return{
             hasError: false,
         }
@@ -84,18 +83,21 @@ export const AuthProvider:FC<Props> = ({ children }) => {
       }
     }
 
-  //   const logout = () => {
-  //     Cookies.remove('token');
-  //     Cookies.remove('cart');
-  //     router.reload();
-  // }
+    const logout = () => {
+      Cookies.remove('token');
+      Cookies.remove('cart');
+      router.reload(); //refresca la app
+  }
 
-    return (
+  return (
     <AuthContext.Provider value={{
         ...state,
-        //methods
+
+        // Methods
         loginUser,
         registerUser,
+        logout,
+     
     }}>
         { children }
     </AuthContext.Provider>

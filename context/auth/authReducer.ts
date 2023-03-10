@@ -3,8 +3,8 @@ import { AuthState } from '.';
 
 
 type AuthActionType = 
-   | { type: '[Auth] - Login ', payload: IUser } 
-   | { type: '[Auth] - Logout ' } 
+   | { type: '[Auth] - Login', payload: IUser } 
+   | { type: '[Auth] - Logout' } 
 
 
 
@@ -12,17 +12,17 @@ export const authReducer = ( state: AuthState, action: AuthActionType ): AuthSta
 
    switch (action.type) {
 
-    case '[Auth] - Login ':
+    case '[Auth] - Login':
          return {
             ...state,
-           isLogginIn: true,
+            isLoggedIn: true,
            user: action.payload,
         }
         
-    case '[Auth] - Logout ':
+    case '[Auth] - Logout':
         return {
             ...state,
-           isLogginIn: false,
+            isLoggedIn: false,
            user: undefined,
         }
 

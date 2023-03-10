@@ -9,7 +9,7 @@ export const SideMenu = () => {
 
     const router = useRouter();
     const {isMenuOpen, toggleSideMenu} = useContext (UiContext);
-    const {user, isLoggedIn} = useContext (AuthContext);
+    const {user, isLoggedIn, logout} = useContext (AuthContext);
 
     const [searchTerm, setSearchTerm ] = useState('');
 
@@ -54,9 +54,9 @@ export const SideMenu = () => {
                     />
                 </ListItem>
 
-                {
-                    isLoggedIn && ( //Valida si esta logeado
-                        <>
+                { //Valida si esta logeado
+                    isLoggedIn && ( 
+                        <> 
                             <ListItem button>
                                 <ListItemIcon>
                                     <AccountCircleOutlined/>
@@ -110,10 +110,10 @@ export const SideMenu = () => {
                     <ListItemText primary={'Niños'} />
                 </ListItem>
 
-                {
-                  isLoggedIn 
+                {//Si esta logeado y si no está logeado
+                  isLoggedIn
                   ?(
-                    <ListItem button>
+                    <ListItem button  onClick={logout}>
                       <ListItemIcon>
                           <LoginOutlined/>
                       </ListItemIcon>
@@ -122,7 +122,10 @@ export const SideMenu = () => {
                     
                   )
                   : (
-                    <ListItem button>
+                    <ListItem 
+                        button
+                        onClick={() => navigateTo(`/auth/login?p=${router.asPath}`)}
+                        >
                       <ListItemIcon>
                           <VpnKeyOutlined/>
                       </ListItemIcon>
