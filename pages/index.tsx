@@ -3,11 +3,14 @@ import { ProductList } from "@/components/products";
 import { FullScreenLoading } from "@/components/ui/FullScreenLoading";
 import { Typography } from "@mui/material";
 import { NextPage } from "next";
+import { useSession } from "next-auth/react";
 import { useProducts } from "../hooks";
 {/*Siempre que se use un map se debe poner un key */}
 
 const HomePage: NextPage = () => {
   
+  const session = useSession();
+  //console.log({session})
   const {products, isLoading} = useProducts('/products');
 
 

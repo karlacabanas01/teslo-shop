@@ -1,14 +1,17 @@
-import { useContext, useState } from 'react';
+import { useEffect, useState } from 'react';
 import NextLink from 'next/link';
-import { Box, Button, Chip, Grid, TextField, Typography } from '@mui/material';
+import { useRouter } from 'next/router';
+import { signIn, getSession, getProviders } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
+import { GetServerSideProps } from 'next';
+
+import { Box, Button, Chip, Divider, Grid, TextField, Typography } from '@mui/material';
+import { ErrorOutline } from '@mui/icons-material';
+
 import { AuthLayout } from '../../components/layouts'
 import { validations } from '@/utils';
-import { tesloApi } from '@/api';
-import { ErrorOutline } from '@mui/icons-material';
-import { display } from '@mui/system';
-import { AuthContext } from '@/context';
-import { useRouter } from 'next/router';
+
+
 
 
 type FormData = {
@@ -22,27 +25,41 @@ const LoginPage = () => {
 
   const router = useRouter();
 
-  const {loginUser} = useContext(AuthContext); //Para poder traer codigo de los Context, Provider, Reducer
+  //const {loginUser} = useContext(AuthContext); //Para poder traer codigo de los Context, Provider, Reducer
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
   const [showError, setShowError] = useState(false)
+  
+  //traer los demas proveedores, como github, facebook, google, etc.
+  const [providers, setProviders] = useState<any>({});
+
+  useEffect(() => {
+    getProviders().then( prov => {
+      //console.log({prov});
+      setProviders(prov);
+    })
+  }, [])
 
 
   const onLoginUser  = async ({email, password}: FormData) =>{
 
-    setShowError(false);
-    const isValidLogin = await loginUser(email, password);
+     
+    // setShowError(false);
+    // const isValidLogin = await loginUser(email, password);
 
-    if (!isValidLogin) {
-      setShowError(true);
-      setTimeout(() => setShowError(false), 3000);
-      return;
-    }
+    // if (!isValidLogin) {
+    //   setShowError(true);
+    //   setTimeout(() => setShowError(false), 3000);
+    //   return;
+    // }
 
 
-    //navegacion
-    const destination =  router.query.p?.toString() || '/';
-    router.replace(destination);
+    // //navegacion
+    // const destination =  router.query.p?.toString() || '/';
+    // router.replace(destination);
   
+    await signIn ('credentials', {email, password });
+
+
   }
 
   return (
@@ -115,6 +132,29 @@ const LoginPage = () => {
               
             </Grid>
 
+            {/* Boton para github y proveedores */}
+            <Grid item xs={12} display="flex" flexDirection="column" justifyContent="end">
+              <Divider sx={{width: '100', mb: 2}} />
+              {
+                Object.values( providers ) .map(( provider: any ) => { //Es una propiedad de js para traer objetos
+                  if(provider.id === 'credentials') return (<div key="credentials"></div>)
+                  return(
+                     <Button
+                      key={provider.id}
+                      variant="outlined"
+                      fullWidth
+                      color="primary"
+                      sx={{ mb:1 }}
+                      onClick={() => signIn(provider.id)}
+                     >
+                      {provider.name}
+                     </Button>
+                  )
+
+                })
+              }
+            </Grid>
+
           </Grid>
         </Box> 
       </form>
@@ -123,4 +163,25 @@ const LoginPage = () => {
   );
 };
 
+export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+    
+  const session = await getSession({ req }); //NextAuth
+  // console.log({session});
+
+  const { p = '/' } = query;
+
+  if ( session ) {
+      return { //Si tengo una sesion lo amndo a esa pagina
+          redirect: {
+              destination: p.toString(),
+              permanent: false
+          }
+      }
+  }
+
+
+  return {
+      props: { }
+  }
+}
 export default LoginPage;
